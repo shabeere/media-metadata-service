@@ -1,5 +1,5 @@
 # media-metadata-service
-A spring-boot application that consumes raw data media content meta-data from an external source and provides the data in the same format after applying required filters to it.
+A spring-boot application that consumes raw media content meta-data from an external source and provides the data in the same format after applying required filters to it.
 Java 8 or higher is required to execute the program.
 
 How to compile and deploy the service:

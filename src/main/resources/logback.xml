@@ -14,7 +14,7 @@
 	<root level="INFO">
 		<appender-ref ref="STDOUT" />
 	</root>
-	<logger name="com.splay" level="INFO" additivity="false">
+	<logger name="com.splay" level="TRACE" additivity="false">
 		<appender-ref ref="STDOUT" />
 		<appender-ref ref="FILE" />
 	</logger>

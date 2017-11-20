@@ -25,10 +25,13 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.splay.constants.FilterType;
+import com.splay.content.bean.BaseFilterParam;
 import com.splay.content.bean.MediaRequestParam;
 import com.splay.content.exception.DataloadFailedException;
 import com.splay.content.model.VideoMetaData;
-import com.splay.content.service.IMediaDataLoadService;
+import com.splay.content.service.IMediaFilterService;
+import com.splay.content.service.MediaFilterServiceFactory;
 import com.splay.util.AppConstants;
 import com.splay.validator.RequestValidator;
 
@@ -52,7 +55,7 @@ public class MetadataController {
 	private RequestValidator requestValidator;
 	
 	@Autowired
-	private IMediaDataLoadService dataLoadService;
+	private MediaFilterServiceFactory filterServiceFactory;
 	
 	@Value(value = "${metadata.data.url}")
 	String metaDataUrl;
@@ -80,8 +83,8 @@ public class MetadataController {
     	
     	return metaData;
     }
-
-	/**
+    
+    /**
 	 * Private method that process the metadata request
 	 * 
 	 * @param videoMetadataReq
@@ -95,24 +98,22 @@ public class MetadataController {
     	if(videoMetadataReq.getFilter() != null) {
     		filter = videoMetadataReq.getFilter().trim().toUpperCase();
     	}
-		VideoMetaData metaData = null;
-    	switch (filter) {
-			case AppConstants.CONTENT_FILTER_CENSORING:
-				String censoringLevel = videoMetadataReq.getLevel();
-				if(censoringLevel==null) {
-					metaData = dataLoadService.retreiveDataWithoutCensoring(metaDataUrl);
-				} else {
-					metaData = dataLoadService.retreiveDataWithCensoring(metaDataUrl, 
-							censoringLevel.equalsIgnoreCase(AppConstants.CONTENT_CENSORED));
-				}
-				break;
-			case AppConstants.CONTENT_FILTER_NO_FILTER:
-				metaData = dataLoadService.retreiveDataWithoutCensoring(metaDataUrl);
-				break;
-			default:
-				logger.warn("Additional valid filter {} added. Functionality not implemented", filter);
-				break;
-		}
+    	
+    	FilterType filterType = FilterType.getFilterType(filter);
+    	if(filterType==null) {
+    		logger.warn("Incomplete implementation for filter", filter);
+    		throw new DataloadFailedException("Incomplete implementation for filter "+filter);
+    	}
+    	// An additional check
+    	IMediaFilterService filterService = filterServiceFactory.getMediaFilterService(filterType);
+    	if(filterService==null) {
+    		logger.warn("Additional valid filter {} added. Functionality not implemented", filter);
+    		throw new DataloadFailedException("Filter implementation not found");
+    	}
+    	
+    	BaseFilterParam filterParam = AppUtil.getFilterParam(filterType);
+    	filterParam.setParamValues(new String[] {videoMetadataReq.getLevel()});
+    	VideoMetaData metaData = filterService.applyFilter(metaDataUrl, filterParam);
     	
 		return metaData;
 	}

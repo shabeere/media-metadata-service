@@ -25,5 +25,5 @@ public class AppConstants {
 	
 	public static final String CONTENT_FILTER_CENSORING = "CENSORING";
 	
-	public static final String CONTENT_FILTER_NO_FILTER = "NO_FILTER";
+	public static final String CONTENT_FILTER_NO_FILTER = "NONE";
 }

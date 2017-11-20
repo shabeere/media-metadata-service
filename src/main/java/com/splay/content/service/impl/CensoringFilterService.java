@@ -13,27 +13,54 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
+import com.splay.content.bean.BaseFilterParam;
+import com.splay.content.bean.CensoringFilterParam;
 import com.splay.content.exception.DataloadFailedException;
 import com.splay.content.model.VideoMetaData;
-import com.splay.content.service.IMediaDataLoadService;
+import com.splay.content.service.IMediaFilterService;
+import com.splay.util.AppConstants;
 import com.splay.util.ContentFilterHelper;
 
 /**
  * @author Shabeer Ellath
  * @Version 1.0
- * Created Date: Nov 18, 2017
+ * Created Date: Nov 20, 2017
  * 
  */
-@Service
-public class MediaDataLoadService implements IMediaDataLoadService {
+@Service("FilterService_CENSORING")
+public class CensoringFilterService implements IMediaFilterService {
 
-	private static final Logger logger = LoggerFactory.getLogger(MediaDataLoadService.class);
+	private static final Logger logger = LoggerFactory.getLogger(CensoringFilterService.class);
 	
 	@Autowired
 	private ContentFilterHelper filterHelper;
-
+	
+	/*
+	 * (non-Javadoc)
+	 * @see com.splay.content.service.IMediaFilterService#applyFilter(java.lang.String, com.splay.content.bean.BaseFilterParam)
+	 */
+	@Override
+	public VideoMetaData applyFilter(String metaDataUrl, BaseFilterParam filterParam) 
+		throws DataloadFailedException{
+		logger.trace("Applying sensoring filter");
+		if(filterParam==null || ! (filterParam instanceof CensoringFilterParam)) {
+			logger.warn("Invalid filter parameter. Expected non-null CensoringFilterParam");
+			return null;
+		}
+		CensoringFilterParam censoringFilter = (CensoringFilterParam)filterParam;
+		VideoMetaData metaData = null;
+		String censoringLevel = censoringFilter.getLevel();
+		if(censoringLevel==null) {
+			metaData = retreiveDataWithoutCensoring(metaDataUrl);
+		} else {
+			metaData = retreiveDataWithCensoring(metaDataUrl, 
+					censoringLevel.equalsIgnoreCase(AppConstants.CONTENT_CENSORED));
+		}
+		
+		return metaData;
+	}
+	
 	/* 
 	 * This function retrieve content from an external URL and 
 	 * returns the same content after applying filters based on
@@ -42,13 +69,12 @@ public class MediaDataLoadService implements IMediaDataLoadService {
 	 * (non-Javadoc)
 	 * @see com.splay.content.service.IMediaDataLoadService#retreiveDataWithCensoring(java.lang.String, boolean)
 	 */
-	@Override
-	public VideoMetaData retreiveDataWithCensoring(String srcUrl, boolean isCensored) 
+	private VideoMetaData retreiveDataWithCensoring(String srcUrl, boolean isCensored) 
 			throws DataloadFailedException {
 		logger.trace("Retreiving data with censoring filter");
 		VideoMetaData metaData;
 		try {
-			metaData = retreiveFromSource(srcUrl);
+			metaData = filterHelper.retreiveFromSource(srcUrl);
 		} catch (Exception e) {
 			logger.error("Error while retreiving raw data from source");
 			throw new DataloadFailedException("Could not load data from source.");
@@ -66,13 +92,12 @@ public class MediaDataLoadService implements IMediaDataLoadService {
 	 * (non-Javadoc)
 	 * @see com.splay.content.service.IMediaDataLoadService#retreiveDataWithoutCensoring(java.lang.String)
 	 */
-	@Override
-	public VideoMetaData retreiveDataWithoutCensoring(String srcUrl) 
+	private VideoMetaData retreiveDataWithoutCensoring(String srcUrl) 
 			throws DataloadFailedException {
 		logger.trace("Retreiving data without censoring filter");
 		VideoMetaData metaData;
 		try {
-			metaData = retreiveFromSource(srcUrl);
+			metaData = filterHelper.retreiveFromSource(srcUrl);
 		} catch (Exception e) {
 			logger.error("Error while retreiving raw data from source");
 			throw new DataloadFailedException("Could not load data from source.");
@@ -82,20 +107,4 @@ public class MediaDataLoadService implements IMediaDataLoadService {
 		return metaData;
 	}
 
-	/*
-	 * Private function that retreives data from external source
-	 *  
-	 * @param metaDataUrl The external source URL
-	 * @return
-	 * @throws Exception
-	 */
-	private VideoMetaData retreiveFromSource(String metaDataUrl) 
-			throws Exception{
-		RestTemplate restTemplate = new RestTemplate();
-    	logger.trace("Loading data from external URL {}", metaDataUrl);
-    	// Load data from external URL
-    	VideoMetaData metaData = restTemplate.getForObject(metaDataUrl, VideoMetaData.class);
-    	logger.trace("Data loaded from external URL");
-    	return metaData;
-	}
 }

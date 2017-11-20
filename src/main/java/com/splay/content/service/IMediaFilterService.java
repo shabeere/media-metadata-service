@@ -9,20 +9,18 @@
  */
 package com.splay.content.service;
 
+import com.splay.content.bean.BaseFilterParam;
 import com.splay.content.exception.DataloadFailedException;
 import com.splay.content.model.VideoMetaData;
 
 /**
  * @author Shabeer Ellath
  * @Version 1.0
- * Created Date: Nov 18, 2017
+ * Created Date: Nov 20, 2017
  * 
  */
-public interface IMediaDataLoadService {
+public interface IMediaFilterService {
 
-	VideoMetaData retreiveDataWithCensoring(String srcUrl, boolean isCensored) 
-			throws DataloadFailedException;
-	
-	VideoMetaData retreiveDataWithoutCensoring(String srcUrl)
+	public VideoMetaData applyFilter(String metaDataUrl, BaseFilterParam filterParam)
 			throws DataloadFailedException;
 }

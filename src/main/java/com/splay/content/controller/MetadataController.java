@@ -27,7 +27,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.splay.constants.FilterType;
 import com.splay.content.bean.BaseFilterParam;
-import com.splay.content.bean.CensoringFilterParam;
 import com.splay.content.bean.MediaRequestParam;
 import com.splay.content.exception.DataloadFailedException;
 import com.splay.content.model.VideoMetaData;
@@ -111,7 +110,8 @@ public class MetadataController {
     		logger.warn("Additional valid filter {} added. Functionality not implemented", filter);
     		throw new DataloadFailedException("Filter implementation not found");
     	}
-    	BaseFilterParam filterParam = new CensoringFilterParam();
+    	
+    	BaseFilterParam filterParam = AppUtil.getFilterParam(filterType);
     	filterParam.setParamValues(new String[] {videoMetadataReq.getLevel()});
     	VideoMetaData metaData = filterService.applyFilter(metaDataUrl, filterParam);
     	

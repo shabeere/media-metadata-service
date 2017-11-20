@@ -7,7 +7,7 @@
  * Copyright 2017
  *
  */
-package com.splay.content.controller;
+package com.splay.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

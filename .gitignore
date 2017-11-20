@@ -6,6 +6,7 @@
 .settings
 .springBeans
 .target
+.git
 mvnw
 mvnw.cmd
 
